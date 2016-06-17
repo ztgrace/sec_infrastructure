@@ -1,0 +1,53 @@
+---
+- name: Perform an apt-get update & apt-get dist-upgrade
+  apt: upgrade=dist update_cache=yes
+
+# Install required packages
+- name: Install common dependencies
+  apt: name={{ item }} state=present
+  with_items:
+    - python-scapy
+    - git 
+    - vim
+    - tmux
+    - ntp
+    - python-pip
+    - unzip
+    - nmap
+    - tor
+    - libevent-dev
+    - libncurses5-dev
+
+- name: Download dotfiles
+  git: repo=https://github.com/ztgrace/dotfiles dest=/root/dotfiles force=yes
+
+- name: Install dotfiles
+  shell: sed -i 's/ln -is/ln -fs/' ./install.sh && ./install.sh chdir=/root/dotfiles
+
+- name: Enable core dumps
+  shell: ulimit -c unlimited
+
+- name: Map pid to core dump
+  shell: echo 1 > /proc/sys/kernel/core_uses_pid
+
+- name: Set timezone
+  shell: ln -sf /usr/share/zoneinfo/America/Chicago /etc/localtime
+  #shell: timedatectl set-timezone "America/Chicago"
+
+- name: Install ntp
+  service: name=ntp state=started
+
+- name: Enable automatic install security updates
+  template: src=templates/20auto-upgrades.j2 dest=/etc/apt/apt.conf.d/20auto-upgrades
+
+- stat: path=/swapfile get_md5=no
+  register: swap
+
+- name: Create swapfile
+  shell: fallocate -l 4G /swapfile; chmod 600 /swapfile; mkswap /swapfile; swapon /swapfile
+  when: swap.stat.exists is defined and swap.stat.exists == False
+
+- name: Add swafile to /etc/fstab
+  lineinfile: dest=/etc/fstab regexp="swapfile" line="/swapfile   none    swap    sw    0   0"
+
+

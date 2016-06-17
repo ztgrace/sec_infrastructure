@@ -1,0 +1,33 @@
+---
+- hosts: malwr
+  remote_user: root
+  sudo: yes
+  tasks:
+    - include: common.yml
+
+    - name: Install re base packages
+      apt: name={{ item }} state=present
+      with_items:
+        - gcc
+        - build-essential
+        - unzip
+        - zip
+        - p7zip-full
+        - gdb
+        - sysdig
+
+    - name: Create non-root user
+      user: name=re shell=/bin/bash
+
+    - name: Download dotfiles for re user
+      git: repo=https://github.com/ztgrace/dotfiles dest=/home/re/dotfiles force=yes
+
+    - name: Install dotfiles
+      shell: sed -i 's/ln -is/ln -fs/' ./install.sh && ./install.sh chdir=/root/dotfiles
+
+    - name: Clone radare2
+      git: repo=https://github.com/radare/radare2 dest=/opt/radare2 force=yes
+
+    # run this later in case it blows up
+    - name: Starting radare2 install
+      shell: nohup /opt/radare2/sys/install.sh

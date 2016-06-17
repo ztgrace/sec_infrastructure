@@ -1,0 +1,56 @@
+---
+- hosts: fuzzer
+  remote_user: root
+  sudo: yes
+  tasks:
+    - include: common.yml
+
+    - name: Install fuzzer dependencies
+      apt: name={{ item }} state=present
+      with_items:
+        - gcc-multilib 
+        - libc6-i386 
+        - g++
+        - make
+        - unzip
+        - gdb
+
+    - name: Enable core dumps
+      shell: ulimit -c unlimited
+
+    - name: Map pid to core dump
+      shell: echo 1 > /proc/sys/kernel/core_uses_pid
+
+    - name: Set core pattern
+      shell: echo core >/proc/sys/kernel/core_pattern
+
+    - name: Clone GDB exploitable plugin
+      git: repo=https://github.com/jfoote/exploitable.git dest=/opt/exploitable force=yes
+
+    - name: Install GDB exploitable plugin
+      shell: python setup.py install chdir=/opt/exploitable
+
+    - name: Add exploitable to .gdbinit
+      shell: echo "source /usr/local/lib/python2.7/dist-packages/exploitable-1.32-py2.7.egg/exploitable/exploitable.py" >> ~/.gdbinit
+
+    - name: Clone PEDA
+      git: repo=https://github.com/longld/peda.git dest=/opt/peda force=yes
+
+    - name: Download the latest source tarball for AFL
+      shell: wget http://lcamtuf.coredump.cx/afl/releases/afl-latest.tgz && tar zxf afl-latest.tgz chdir=/opt
+    #  unarchive: src=http://lcamtuf.coredump.cx/afl/releases/afl-latest.tgz dest=/opt copy=no
+ 
+    - name: Make and install AFL
+      shell: cd /opt/afl*; make -j 2 && make install 
+
+    - name: Make in and out dirs
+      file: path={{ item }} state=directory mode=0755
+      with_items:
+        - /opt/afl-in
+        - /opt/afl-out
+
+    - name: mkdir /opt/bff
+      file: path=/opt/bff state=directory mode=0755
+
+    - name: Download BFF
+      shell: wget https://www.cert.org/downloads/vulnerability-analysis/bff/assets/BFF-2.7.zip && unzip BFF-2.7.zip chdir=/opt/bff

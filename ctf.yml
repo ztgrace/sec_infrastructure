@@ -1,0 +1,35 @@
+---
+- hosts: ctf
+  remote_user: root
+  sudo: yes
+  tasks:
+    - include: common.yml
+
+    - name: Install re base packages
+      apt: name={{ item }} state=present
+      with_items:
+        - gcc
+        - build-essential
+        - unzip
+        - zip
+        - p7zip-full
+        - gdb
+
+    - name: Clone radare2
+      git: repo=https://github.com/radare/radare2 dest=/opt/radare2 force=yes
+
+    - name: Clone peda
+      git: repo=https://github.com/longld/peda.git dest=/opt/peda force=yes
+
+    - name: Clone binwalk
+      git: repo=https://github.com/devttys0/binwalk.git dest=/opt/binwalk force=yes
+
+    - name: Install binwalk
+      shell: python setup.py install chdir=/opt/binwalk
+
+    - name: Install checksec
+      shell: wget -O /usr/local/bin/checksec https://raw.githubusercontent.com/slimm609/checksec.sh/master/checksec; chmod 0755 /usr/local/bin/checksec
+
+    # run this later in case it blows up
+    - name: Starting radare2 install
+      shell: nohup /opt/radare2/sys/install.sh

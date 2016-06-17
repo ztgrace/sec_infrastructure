@@ -1,0 +1,41 @@
+---
+- hosts: recon
+  remote_user: root
+  sudo: yes
+  tasks:
+    - include: common.yml
+
+    # Install required packages
+    - name: Install recon-ng dependencies
+      apt: name={{ item }} state=present
+      with_items:
+        - python-lxml
+        - tmux
+
+    - name: Install required python packages
+      shell: pip install dicttoxml dnspython jsonrpclib lxml mechanize slowaes==0.1a1 XlsxWriter olefile PyPDF2
+
+    - name: Clone recon-ng
+      git: repo=https://bitbucket.org/LaNMaSteR53/recon-ng.git dest=/opt/recon-ng
+
+    - name: Clone recon_scripts
+      git: repo=https://github.com/ztgrace/recon_scripts.git dest=/opt/recon_scripts
+
+    - name: Create recon_scripts ip-netblocks directory
+      shell: mkdir -p ~/.recon-ng/modules/recon/ip-netblocks
+
+    - name: Create ip-netblocks symlink
+      shell: ln -s /opt/recon_scripts/arin.py ~/.recon-ng/modules/recon/ip-netblocks/
+
+    - name: Create recon_scripts info_disclosure directory
+      shell: mkdir -p ~/.recon-ng/modules/discovery/info_disclosure/
+
+    - name: Create info_disclosure symlink
+      shell: ln -s /opt/recon_scripts/axfr.py ~/.recon-ng/modules/discovery/info_disclosure/
+
+    - name: Clone subbrute
+      git: repo=https://github.com/TheRook/subbrute.git dest=/opt/subbrute
+
+    - name: Clone Eyewitness
+      git: repo=https://github.com/ChrisTruncer/EyeWitness.git dest=/opt/eyewitness
+

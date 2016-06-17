@@ -1,0 +1,6 @@
+---
+- hosts: vanilla
+  remote_user: root
+  sudo: yes
+  tasks:
+    - include: common.yml
