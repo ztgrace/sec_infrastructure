@@ -45,6 +45,7 @@ Vagrant.configure(2) do |config|
     end
   end
 
+  # Inspired by: http://jerrygamblin.com/2016/10/19/ubuntu-remote-desktop-on-digital-ocean/
   config.vm.define :desktop do |desktop|
     desktop.vm.box = "digital_ocean"
     desktop.vm.hostname = "desktop"
