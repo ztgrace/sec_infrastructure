@@ -45,6 +45,12 @@ Vagrant.configure(2) do |config|
     end
   end
 
+  config.vm.define :desktop do |desktop|
+    desktop.vm.box = "digital_ocean"
+    desktop.vm.hostname = "desktop"
+    desktop.vm.provision "shell", path: "desktop.sh"
+  end
+
   config.vm.provider "virtualbox" do |v|
     v.memory = 1024
     v.cpus = 2
@@ -55,8 +61,8 @@ Vagrant.configure(2) do |config|
     override.vm.box = "digital_ocean"
     override.vm.box_url = "https://github.com/smdahlen/vagrant-digitalocean/raw/master/box/digital_ocean.box"
     provider.token = ENV["DO_API_TOKEN"]
-    #provider.image = "ubuntu-14-04-x64"
-    provider.image = "debian-7-0-x64"
+    provider.image = "ubuntu-16-04-x64"
+    #provider.image = "debian-7-0-x64"
     provider.region = "nyc3"
     provider.size = "512mb"
   end
